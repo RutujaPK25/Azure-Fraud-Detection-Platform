@@ -253,6 +253,56 @@
 					"firstRowAsHeader": true,
 					"quoteChar": "\""
 				},
+				"schema": [
+					{
+						"name": "transaction_id",
+						"type": "String"
+					},
+					{
+						"name": "account_id",
+						"type": "String"
+					},
+					{
+						"name": "amount",
+						"type": "String"
+					},
+					{
+						"name": "country",
+						"type": "String"
+					},
+					{
+						"name": "transaction_time",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/LS_ADLS_Fraud')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DS_Gold_HighRiskTransactions')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS_Fraud",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "high_risk_transactions.csv",
+						"folderPath": "high_risk_transactions",
+						"fileSystem": "gold"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
 				"schema": []
 			},
 			"dependsOn": [
@@ -622,6 +672,109 @@
 				"[concat(variables('factoryId'), '/datasets/DS_Silver_Accounts')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Bonze_Transactions')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Silver_Transactions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DF_Fraud_Detection')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "DS_Silver_Transactions",
+								"type": "DatasetReference"
+							},
+							"name": "transaction"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DS_Gold_HighRiskTransactions",
+								"type": "DatasetReference"
+							},
+							"name": "HighRiskTransactionsSink"
+						}
+					],
+					"transformations": [
+						{
+							"name": "HighValueFilter"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          transaction_id as string,",
+						"          account_id as string,",
+						"          amount as string,",
+						"          country as string,",
+						"          transaction_time as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> transaction",
+						"transaction filter(toInteger(amount)>10000) ~> HighValueFilter",
+						"HighValueFilter sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> HighRiskTransactionsSink"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DS_Silver_Transactions')]",
+				"[concat(variables('factoryId'), '/datasets/DS_Gold_HighRiskTransactions')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/PL_Fraud_Detection')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Data Fraud Detection",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "DF_Fraud_Detection",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"transaction": {},
+									"HighRiskTransactionsSink": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/DF_Fraud_Detection')]"
 			]
 		}
 	]
