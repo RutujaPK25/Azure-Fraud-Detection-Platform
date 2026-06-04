@@ -1,0 +1,24 @@
+{
+	"name": "DS_Gold_Fraud_Alerts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "LS_ADLS_Fraud",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "fraudalerts,csv",
+				"folderPath": "fraudalerts",
+				"fileSystem": "gold"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}

@@ -26,6 +26,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "ForeignTransactionsSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_Gold_Fraud_Alerts",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -34,6 +41,12 @@
 				},
 				{
 					"name": "ForeignTransactionFilter"
+				},
+				{
+					"name": "CalculateFraudScore"
+				},
+				{
+					"name": "FraudScore"
 				}
 			],
 			"scriptLines": [
@@ -49,6 +62,10 @@
 				"     ignoreNoFilesFound: false) ~> transaction",
 				"transaction filter(toInteger(amount)>10000) ~> HighValueFilter",
 				"transaction filter(country!='India') ~> ForeignTransactionFilter",
+				"transaction derive(FraudScore = iif(toInteger(amount)>10000, 50, 0)\r",
+				"+\r",
+				"iif(country != 'India', 30, 0)) ~> CalculateFraudScore",
+				"CalculateFraudScore filter(FraudScore >= 50) ~> FraudScore",
 				"HighValueFilter sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     umask: 0022,",
@@ -62,7 +79,14 @@
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> ForeignTransactionsSink"
+				"     skipDuplicateMapOutputs: true) ~> ForeignTransactionsSink",
+				"FraudScore sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
 			]
 		}
 	}
