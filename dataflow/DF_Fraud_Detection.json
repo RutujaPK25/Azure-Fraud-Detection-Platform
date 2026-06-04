@@ -19,11 +19,21 @@
 						"type": "DatasetReference"
 					},
 					"name": "HighRiskTransactionsSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "DS_Gold_ForeignTransactions",
+						"type": "DatasetReference"
+					},
+					"name": "ForeignTransactionsSink"
 				}
 			],
 			"transformations": [
 				{
 					"name": "HighValueFilter"
+				},
+				{
+					"name": "ForeignTransactionFilter"
 				}
 			],
 			"scriptLines": [
@@ -38,13 +48,21 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> transaction",
 				"transaction filter(toInteger(amount)>10000) ~> HighValueFilter",
+				"transaction filter(country!='India') ~> ForeignTransactionFilter",
 				"HighValueFilter sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     umask: 0022,",
 				"     preCommands: [],",
 				"     postCommands: [],",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> HighRiskTransactionsSink"
+				"     skipDuplicateMapOutputs: true) ~> HighRiskTransactionsSink",
+				"ForeignTransactionFilter sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ForeignTransactionsSink"
 			]
 		}
 	}
