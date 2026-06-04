@@ -1,0 +1,15 @@
+{
+	"name": "ADF-Azure-Fraud-Detection-Platform",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "69d6a22b-0d1f-455d-abe2-8b8213e4a80d",
+		"tenantId": "470002f3-4c4e-4da5-aeef-345c9ff4a6a7"
+	}
+}
