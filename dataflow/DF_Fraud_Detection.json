@@ -1,0 +1,51 @@
+{
+	"name": "DF_Fraud_Detection",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "DS_Silver_Transactions",
+						"type": "DatasetReference"
+					},
+					"name": "transaction"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DS_Gold_HighRiskTransactions",
+						"type": "DatasetReference"
+					},
+					"name": "HighRiskTransactionsSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "HighValueFilter"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          transaction_id as string,",
+				"          account_id as string,",
+				"          amount as string,",
+				"          country as string,",
+				"          transaction_time as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> transaction",
+				"transaction filter(toInteger(amount)>10000) ~> HighValueFilter",
+				"HighValueFilter sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> HighRiskTransactionsSink"
+			]
+		}
+	}
+}

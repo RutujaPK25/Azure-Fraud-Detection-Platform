@@ -19,6 +19,27 @@
 			"firstRowAsHeader": true,
 			"quoteChar": "\""
 		},
-		"schema": []
+		"schema": [
+			{
+				"name": "transaction_id",
+				"type": "String"
+			},
+			{
+				"name": "account_id",
+				"type": "String"
+			},
+			{
+				"name": "amount",
+				"type": "String"
+			},
+			{
+				"name": "country",
+				"type": "String"
+			},
+			{
+				"name": "transaction_time",
+				"type": "String"
+			}
+		]
 	}
 }
